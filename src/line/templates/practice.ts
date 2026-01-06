@@ -1,4 +1,4 @@
-import { FlexMessage } from '@line/bot-sdk';
+import { messagingApi } from '@line/bot-sdk';
 
 interface QuestionData {
     question: string;
@@ -7,9 +7,9 @@ interface QuestionData {
     explanation?: string;
 }
 
-export const getPracticeFlex = (data: QuestionData): FlexMessage => {
+export const getPracticeFlex = (data: QuestionData): messagingApi.FlexMessage => {
     // data: { question: string, options: string[], correct_index: number, explanation: string }
-    const buttons = data.options.map((option: string, index: number) => ({
+    const buttons = data.options.map((option: string, index: number): messagingApi.FlexComponent => ({
         type: 'button',
         action: {
             type: 'postback',

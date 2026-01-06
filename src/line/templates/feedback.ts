@@ -1,4 +1,4 @@
-import { FlexMessage } from '@line/bot-sdk';
+import { messagingApi } from '@line/bot-sdk';
 
 interface ScoreDetails {
     grammar: number;
@@ -7,7 +7,7 @@ interface ScoreDetails {
     task_response?: number; // Optional depending on use
 }
 
-export const getFeedbackFlex = (score: number, feedback: string, details: ScoreDetails): FlexMessage => {
+export const getFeedbackFlex = (score: number, feedback: string, details: ScoreDetails): messagingApi.FlexMessage => {
     return {
         type: 'flex',
         altText: 'Your Feedback',
@@ -23,7 +23,7 @@ export const getFeedbackFlex = (score: number, feedback: string, details: ScoreD
                         weight: 'bold',
                         color: '#1e293b',
                         size: 'xs',
-                        letterSpacing: '1px',
+
                     },
                     {
                         type: 'text',

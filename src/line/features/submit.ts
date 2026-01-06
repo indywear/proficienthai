@@ -1,9 +1,9 @@
 import { supabase } from '@/lib/supabase';
-import { MessagingApiClient } from '@line/bot-sdk';
-import { AIService, AssessmentResult } from '@/lib/ai/service';
+import { messagingApi } from '@line/bot-sdk';
+import { AIService } from '@/lib/ai/service';
 import { getFeedbackFlex } from '../templates/feedback';
 
-export async function handleSubmitRequest(userId: string, text: string, client: MessagingApiClient, replyToken: string) {
+export async function handleSubmitRequest(userId: string, text: string, client: messagingApi.MessagingApiClient, replyToken: string) {
     // 1. Check Active Task
     const { data: task } = await supabase.from('tasks').select('*').eq('is_active', true).single();
 

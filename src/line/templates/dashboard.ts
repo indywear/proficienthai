@@ -1,8 +1,7 @@
-```typescript
-import { FlexMessage } from '@line/bot-sdk';
+import { messagingApi } from '@line/bot-sdk';
 import { User } from '@/types';
 
-export const getDashboardFlex = (user: User): FlexMessage => {
+export const getDashboardFlex = (user: User): messagingApi.FlexMessage => {
     const level = user.level || 'Beginner';
     const points = user.points || 0;
 
@@ -26,7 +25,7 @@ export const getDashboardFlex = (user: User): FlexMessage => {
                         weight: 'bold',
                         size: 'sm',
                         align: 'center',
-                        letterSpacing: '2px',
+
                     },
                     {
                         type: 'text',
@@ -39,7 +38,7 @@ export const getDashboardFlex = (user: User): FlexMessage => {
                     },
                     {
                         type: 'text',
-                        text: `Level: ${ level } | Points: ${ points } `,
+                        text: `Level: ${level} | Points: ${points} `,
                         color: '#cbd5e1',
                         size: 'xs',
                         align: 'center',
@@ -54,7 +53,7 @@ export const getDashboardFlex = (user: User): FlexMessage => {
                     {
                         type: 'box',
                         layout: 'vertical',
-                        marginBottom: 'lg',
+                        margin: 'lg',
                         contents: [
                             { type: 'text', text: 'Weekly Progress', color: '#64748b', size: 'xs', weight: 'bold' },
                             {
@@ -62,8 +61,8 @@ export const getDashboardFlex = (user: User): FlexMessage => {
                                 layout: 'horizontal',
                                 margin: 'sm',
                                 contents: [
-                                    { type: 'box', layout: 'vertical', width: '70%', backgroundColor: '#e2e8f0', height: '6px', cornerRadius: '3px' }, // Background Bar
-                                    { type: 'box', layout: 'vertical', width: '40%', backgroundColor: '#3b82f6', height: '6px', cornerRadius: '3px', position: 'absolute' }, // Progress (Example 40%)
+                                    { type: 'box', layout: 'vertical', width: '70%', backgroundColor: '#e2e8f0', height: '6px', cornerRadius: '3px', contents: [] }, // Background Bar
+                                    { type: 'box', layout: 'vertical', width: '40%', backgroundColor: '#3b82f6', height: '6px', cornerRadius: '3px', position: 'absolute', contents: [] }, // Progress (Example 40%)
                                 ],
                             },
                             { type: 'text', text: '2/5 Tasks Completed', size: 'xs', color: '#94a3b8', margin: 'xs', align: 'end' },

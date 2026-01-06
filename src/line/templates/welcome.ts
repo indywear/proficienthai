@@ -1,6 +1,6 @@
-import { FlexMessage } from '@line/bot-sdk';
+import { messagingApi } from '@line/bot-sdk';
 
-export const getWelcomeFlex = (): FlexMessage => {
+export const getWelcomeFlex = (): messagingApi.FlexMessage => {
     return {
         type: 'flex',
         altText: 'Welcome to ProficienThAI',

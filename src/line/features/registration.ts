@@ -1,7 +1,6 @@
 import { supabase } from '@/lib/supabase';
-import { MessagingApiClient, FlexMessage, TextMessage } from '@line/bot-sdk';
-import { RICH_MENU_IDS, linkRichMenuToUser } from '../richMenu';
-import { showProfile } from './profile';
+import { messagingApi } from '@line/bot-sdk';
+import { linkRichMenuToUser } from '../richMenu';
 
 export const REGISTER_STATES = [
     'INIT',
@@ -18,7 +17,7 @@ export const REGISTER_STATES = [
 
 export type RegisterState = typeof REGISTER_STATES[number];
 
-export async function handleRegistration(userId: string, text: string | undefined, currentState: string, client: MessagingApiClient, replyToken: string) {
+export async function handleRegistration(userId: string, text: string | undefined, currentState: string, client: messagingApi.MessagingApiClient, replyToken: string) {
     // Simple state machine
 
     // Check for EDIT flag
@@ -26,8 +25,8 @@ export async function handleRegistration(userId: string, text: string | undefine
     const baseState = isEditMode ? currentState.split('|')[0] : currentState;
 
     // Helper to reply
-    const reply = async (msg: string | FlexMessage) => {
-        const message = typeof msg === 'string' ? { type: 'text', text: msg } as TextMessage : msg;
+    const reply = async (msg: string | messagingApi.FlexMessage) => {
+        const message = typeof msg === 'string' ? { type: 'text', text: msg } as messagingApi.TextMessage : msg;
         await client.replyMessage({ replyToken, messages: [message] });
     };
 

@@ -1,10 +1,10 @@
-import { FlexMessage } from '@line/bot-sdk';
+import { messagingApi } from '@line/bot-sdk';
 import { User } from '@/types';
 
-export const getProfileFlex = (user: User): FlexMessage => {
-    const metadata = (user as any).metadata || {};
+export const getProfileFlex = (user: User): messagingApi.FlexMessage => {
+    const metadata = user.metadata || {};
 
-    const createRow = (label: string, value: string, field: string) => ({
+    const createRow = (label: string, value: string, field: string): messagingApi.FlexComponent => ({
         type: 'box',
         layout: 'horizontal',
         margin: 'md',
@@ -33,7 +33,7 @@ export const getProfileFlex = (user: User): FlexMessage => {
                 type: 'box',
                 layout: 'vertical',
                 contents: [
-                    { type: 'text', text: 'SCHOLAR IDENTITY', color: '#fbbf24', size: 'xxs', weight: 'bold', letterSpacing: '2px' },
+                    { type: 'text', text: 'SCHOLAR IDENTITY', color: '#fbbf24', size: 'xxs', weight: 'bold' },
                     { type: 'text', text: user.display_name, color: '#ffffff', size: 'xl', weight: 'bold', margin: 'sm' },
                     { type: 'text', text: user.level || 'Beginner', color: '#cbd5e1', size: 'xs', margin: 'xs' }
                 ]
@@ -42,16 +42,11 @@ export const getProfileFlex = (user: User): FlexMessage => {
                 type: 'box',
                 layout: 'vertical',
                 contents: [
-                    // @ts-ignore
-                    createRow('Name (CN)', metadata.name_cn, 'name_cn'),
-                    // @ts-ignore
-                    createRow('Student ID', user.student_id, 'student_id'),
-                    // @ts-ignore
-                    createRow('University', user.university, 'university'),
-                    // @ts-ignore
-                    createRow('Email', metadata.email, 'email'),
-                    // @ts-ignore
-                    createRow('Nationality', metadata.nationality, 'nationality'),
+                    createRow('Name (CN)', (metadata.name_cn as string), 'name_cn'),
+                    createRow('Student ID', user.student_id as string, 'student_id'),
+                    createRow('University', user.university as string, 'university'),
+                    createRow('Email', (metadata.email as string), 'email'),
+                    createRow('Nationality', (metadata.nationality as string), 'nationality'),
                 ]
             }
         }

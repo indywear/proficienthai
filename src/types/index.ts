@@ -6,6 +6,9 @@ export interface User {
     points: number;
     xp: number;
     streak: number;
+    metadata?: Record<string, unknown>;
+    student_id?: string;
+    university?: string;
 }
 
 export interface Task {

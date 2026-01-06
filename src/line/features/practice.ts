@@ -1,10 +1,10 @@
 import { supabase } from '@/lib/supabase';
-import { MessagingApiClient } from '@line/bot-sdk';
-import { AIService, QuestionData } from '@/lib/ai/service';
+import { messagingApi } from '@line/bot-sdk';
+import { AIService } from '@/lib/ai/service';
 import { getPracticeFlex } from '../templates/practice';
 
 // Initialize Practice Session
-export async function startPractice(userId: string, client: MessagingApiClient, replyToken: string) {
+export async function startPractice(userId: string, client: messagingApi.MessagingApiClient, replyToken: string) {
     const { data: user } = await supabase.from('users').select('*').eq('line_id', userId).single();
 
     // Get weaknesses (mock logic or DB)
@@ -30,9 +30,9 @@ export async function startPractice(userId: string, client: MessagingApiClient, 
     }
 }
 
-export async function handlePracticeAnswer(userId: string, choiceIndex: number, client: MessagingApiClient, replyToken: string) {
+export async function handlePracticeAnswer(userId: string, choiceIndex: number, client: messagingApi.MessagingApiClient, replyToken: string) {
     const { data: user } = await supabase.from('users').select('metadata').eq('line_id', userId).single();
-    const correctIndex = (user?.metadata as any)?.current_practice_answer;
+    const correctIndex = (user?.metadata as Record<string, unknown>)?.current_practice_answer;
 
     if (correctIndex === undefined) {
         await client.replyMessage({ replyToken, messages: [{ type: 'text', text: 'Session expired.' }] });

@@ -1,5 +1,4 @@
 import { supabase } from '@/lib/supabase';
-import { User, Submission } from '@/types';
 import { notFound } from 'next/navigation';
 import DashboardClient from './DashboardClient'; // Client component for Charts
 

@@ -1,0 +1,20 @@
+src/line/templates/dashboard.ts(63,37): error TS1136: Property assignment expected.
+src/line/templates/dashboard.ts(70,21): error TS1136: Property assignment expected.
+src/line/templates/dashboard.ts(72,18): error TS1005: ';' expected.
+src/line/templates/dashboard.ts(73,23): error TS1005: ';' expected.
+src/line/templates/dashboard.ts(74,21): error TS1109: Expression expected.
+src/line/templates/dashboard.ts(74,22): error TS1128: Declaration or statement expected.
+src/line/templates/dashboard.ts(77,19): error TS1005: ';' expected.
+src/line/templates/dashboard.ts(78,23): error TS1005: ';' expected.
+src/line/templates/dashboard.ts(79,28): error TS1005: ';' expected.
+src/line/templates/dashboard.ts(80,33): error TS1005: ';' expected.
+src/line/templates/dashboard.ts(89,21): error TS1109: Expression expected.
+src/line/templates/dashboard.ts(89,22): error TS1128: Declaration or statement expected.
+src/line/templates/dashboard.ts(90,17): error TS1128: Declaration or statement expected.
+src/line/templates/dashboard.ts(90,18): error TS1128: Declaration or statement expected.
+src/line/templates/dashboard.ts(91,13): error TS1128: Declaration or statement expected.
+src/line/templates/dashboard.ts(91,14): error TS1128: Declaration or statement expected.
+src/line/templates/dashboard.ts(92,9): error TS1128: Declaration or statement expected.
+src/line/templates/dashboard.ts(92,10): error TS1128: Declaration or statement expected.
+src/line/templates/dashboard.ts(93,5): error TS1128: Declaration or statement expected.
+src/line/templates/dashboard.ts(94,1): error TS1128: Declaration or statement expected.

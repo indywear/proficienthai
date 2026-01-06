@@ -1,9 +1,9 @@
 import { supabase } from '@/lib/supabase';
-import { MessagingApiClient, FlexMessage } from '@line/bot-sdk';
+import { messagingApi } from '@line/bot-sdk';
 import { AIService, AssessmentResult } from '@/lib/ai/service';
 import { getFeedbackFlex } from '../templates/feedback';
 
-export async function handleFeedbackRequest(userId: string, text: string, client: MessagingApiClient, replyToken: string) {
+export async function handleFeedbackRequest(userId: string, text: string, client: messagingApi.MessagingApiClient, replyToken: string) {
     // 1. Analyze with AI
     // We can use a default rubric for general feedback or fetch from active task
     const defaultRubric = "Evaluate grammar, vocabulary, and organization for a Thai learner.";

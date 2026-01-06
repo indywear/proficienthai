@@ -1,8 +1,8 @@
 import { supabase } from '@/lib/supabase';
-import { MessagingApiClient } from '@line/bot-sdk';
+import { messagingApi } from '@line/bot-sdk';
 import { getProfileFlex } from '../templates/profile';
 
-export async function showProfile(userId: string, client: MessagingApiClient, replyToken: string) {
+export async function showProfile(userId: string, client: messagingApi.MessagingApiClient, replyToken: string) {
     const { data: user } = await supabase.from('users').select('*').eq('line_id', userId).single();
     if (!user) {
         await client.replyMessage({ replyToken, messages: [{ type: 'text', text: 'Profile not found. Please register first.' }] });
@@ -13,7 +13,7 @@ export async function showProfile(userId: string, client: MessagingApiClient, re
     await client.replyMessage({ replyToken, messages: [flex] });
 }
 
-export async function handleEditProfile(userId: string, field: string, client: MessagingApiClient, replyToken: string) {
+export async function handleEditProfile(userId: string, field: string, client: messagingApi.MessagingApiClient, replyToken: string) {
     // Map field to Registration State
     // Fields: name_cn, student_id, university, email, nationality
     const fieldMap: Record<string, string> = {

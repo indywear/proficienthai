@@ -1,0 +1,24 @@
+
+> void-feynman@0.1.0 lint
+> eslint
+
+
+C:\Users\Pack\.gemini\antigravity\playground\void-feynman\src\app\dashboard\[lineId]\page.tsx
+  2:10  warning  'User' is defined but never used        @typescript-eslint/no-unused-vars
+  2:16  warning  'Submission' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\Pack\.gemini\antigravity\playground\void-feynman\src\line\features\practice.ts
+  3:21  warning  'QuestionData' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\Pack\.gemini\antigravity\playground\void-feynman\src\line\features\registration.ts
+  3:10  warning  'RICH_MENU_IDS' is defined but never used  @typescript-eslint/no-unused-vars
+  4:10  warning  'showProfile' is defined but never used    @typescript-eslint/no-unused-vars
+
+C:\Users\Pack\.gemini\antigravity\playground\void-feynman\src\line\features\submit.ts
+  3:21  warning  'AssessmentResult' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\Pack\.gemini\antigravity\playground\void-feynman\src\line\templates\welcome.ts
+  3:32  warning  'displayName' is defined but never used  @typescript-eslint/no-unused-vars
+
+✖ 7 problems (0 errors, 7 warnings)
+
