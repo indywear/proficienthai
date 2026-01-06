@@ -9,9 +9,9 @@ const client = new line.messagingApi.MessagingApiClient(config);
 
 // IDs would typically be stored in DB or Config after creation
 export const RICH_MENU_IDS = {
-    DEFAULT: 'richmenu-default-id-placeholder',
-    TASK_PENDING: 'richmenu-task-pending-id-placeholder',
-    REGISTER: 'richmenu-register-id-placeholder',
+    DEFAULT: process.env.LINE_RICH_MENU_ID_DEFAULT || '',
+    TASK_PENDING: process.env.LINE_RICH_MENU_ID_TASK_PENDING || '',
+    REGISTER: process.env.LINE_RICH_MENU_ID_REGISTER || '',
 };
 
 export async function linkRichMenuToUser(userId: string, menuType: keyof typeof RICH_MENU_IDS) {

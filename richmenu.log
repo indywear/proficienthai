@@ -1,0 +1,7 @@
+Creating Rich Menu: Register...
+  - Created ID: richmenu-ee5a86da6da8c9e688c0267baf89d381
+  - Uploading Image: C:\Users\Pack\.gemini\antigravity\playground\void-feynman\public\img\richmenu\menu_register.png...
+Script failed: Error: Failed to upload conversation image for Register: {"message":"The image size is not allowed for richmenu"}
+    at createRichMenu (C:\Users\Pack\.gemini\antigravity\playground\void-feynman\scripts\setup-rich-menu.js:76:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async main (C:\Users\Pack\.gemini\antigravity\playground\void-feynman\scripts\setup-rich-menu.js:103:28)
