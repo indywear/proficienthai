@@ -1,0 +1,110 @@
+import prisma from "@/lib/db/prisma";
+
+export interface FillBlankQuestion {
+    id: string;
+    sentence: string;  // Contains __________ as placeholder
+    answer: string;
+}
+
+/**
+ * Get random fill-in-blank questions for the game
+ */
+export async function getRandomFillBlankQuestions(count: number = 5): Promise<FillBlankQuestion[]> {
+    const allQuestions = await prisma.fillBlankQuestion.findMany({
+        take: count * 3,
+    });
+
+    if (allQuestions.length === 0) {
+        return [];
+    }
+
+    // Shuffle and pick
+    const shuffled = allQuestions.sort(() => Math.random() - 0.5);
+
+    return shuffled.slice(0, count).map(q => ({
+        id: q.id,
+        sentence: q.sentence,
+        answer: q.answer,
+    }));
+}
+
+/**
+ * Check if the user's answer is correct (exact match)
+ */
+export function checkFillBlankAnswer(userAnswer: string, correctAnswer: string): boolean {
+    const normalized = userAnswer.trim();
+    const correct = correctAnswer.trim();
+    return normalized === correct;
+}
+
+/**
+ * Calculate points for fill-blank game
+ */
+export function calculateFillBlankPoints(correctCount: number): number {
+    return correctCount * 10;
+}
+
+/**
+ * Format fill-blank question for LINE message
+ */
+export function formatFillBlankQuestion(
+    question: FillBlankQuestion,
+    currentIndex: number,
+    totalCount: number
+): string {
+    return `📝 ข้อ ${currentIndex + 1}/${totalCount}
+
+${question.sentence}
+
+พิมพ์คำตอบที่ถูกต้องลงในช่องว่าง`;
+}
+
+/**
+ * Format game result message
+ */
+export function formatFillBlankResult(
+    correct: boolean,
+    correctAnswer: string,
+    currentIndex: number,
+    totalCount: number
+): string {
+    if (correct) {
+        return `✅ ถูกต้อง! +10 คะแนน
+
+${currentIndex < totalCount - 1 ? "" : ""}`;
+    } else {
+        return `❌ ไม่ถูกต้อง
+
+คำตอบที่ถูกคือ: ${correctAnswer}`;
+    }
+}
+
+/**
+ * Format final game summary
+ */
+export function formatFillBlankGameSummary(
+    correctCount: number,
+    totalCount: number,
+    pointsEarned: number
+): string {
+    const percentage = Math.round((correctCount / totalCount) * 100);
+    let emoji = "🎉";
+    let message = "ยอดเยี่ยม!";
+
+    if (percentage < 50) {
+        emoji = "💪";
+        message = "พยายามอีกนิด!";
+    } else if (percentage < 80) {
+        emoji = "👍";
+        message = "ดีมาก!";
+    }
+
+    return `${emoji} จบเกมเติมคำแล้ว! ${message}
+
+📊 ผลคะแนน:
+✅ ถูก: ${correctCount}/${totalCount} ข้อ
+📈 ได้คะแนน: +${pointsEarned} แต้ม
+🎯 อัตราถูก: ${percentage}%
+
+พิมพ์ "เกม" เพื่อเล่นเกมอื่น หรือ "เติมคำ" เพื่อเล่นใหม่`;
+}

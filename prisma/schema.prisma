@@ -1,0 +1,406 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// =====================
+// User & Authentication
+// =====================
+
+model User {
+  id              String    @id @default(cuid())
+  lineUserId      String    @unique
+  chineseName     String?
+  thaiName        String?
+  studentId       String?
+  university      String?
+  email           String?
+  nationality     String?
+  thaiLevel       ThaiLevel @default(BEGINNER)
+  consent         Boolean   @default(false)
+  registrationStep Int      @default(0)
+  isRegistered    Boolean   @default(false)
+  
+  // Gamification
+  totalPoints     Int       @default(0)
+  currentLevel    Int       @default(1)
+  
+  // Timestamps
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @default(now()) @updatedAt
+  
+  // Relations
+  submissions       Submission[]
+  feedbackRequests  FeedbackRequest[]
+  practiceSessions  PracticeSession[]
+  badges            UserBadge[]
+  vocabularyProgress UserVocabulary[]
+  
+  @@index([lineUserId])
+}
+
+enum ThaiLevel {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+}
+
+// =====================
+// Tasks & Assignments
+// =====================
+
+model Task {
+  id          String   @id @default(cuid())
+  weekNumber  Int      @unique
+  title       String
+  description String   @db.Text
+  contentUrl  String
+  minWords    Int      @default(80)
+  maxWords    Int      @default(120)
+  deadline    DateTime
+  isActive    Boolean  @default(true)
+  
+  // Rubric configuration (JSON)
+  rubric      Json     @default("{\"grammar\": 25, \"vocabulary\": 25, \"organization\": 25, \"taskFulfillment\": 25}")
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  submissions      Submission[]
+  feedbackRequests FeedbackRequest[]
+  
+  @@index([weekNumber])
+  @@index([isActive])
+}
+
+// =====================
+// Submissions
+// =====================
+
+model Submission {
+  id           String   @id @default(cuid())
+  userId       String
+  taskId       String
+  content      String   @db.Text
+  wordCount    Int
+  
+  // Rubric scores
+  grammarScore       Int @default(0)
+  vocabularyScore    Int @default(0)
+  organizationScore  Int @default(0)
+  taskFulfillmentScore Int @default(0)
+  totalScore         Int @default(0)
+  
+  // AI Feedback
+  aiFeedback   String?  @db.Text
+  
+  // Gamification
+  pointsEarned Int      @default(0)
+  onTime       Boolean  @default(true)
+  earlyBonus   Boolean  @default(false)
+  
+  submittedAt  DateTime @default(now())
+  
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([taskId])
+  @@index([submittedAt])
+}
+
+// =====================
+// Feedback Requests
+// =====================
+
+model FeedbackRequest {
+  id           String   @id @default(cuid())
+  userId       String
+  taskId       String?
+  draftContent String   @db.Text
+  aiFeedback   String?  @db.Text
+  pointsEarned Int      @default(5)
+  isRevision   Boolean  @default(false)
+  
+  requestedAt  DateTime @default(now())
+  
+  // Relations
+  user User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  task Task? @relation(fields: [taskId], references: [id], onDelete: SetNull)
+  
+  @@index([userId])
+  @@index([requestedAt])
+}
+
+// =====================
+// Practice Sessions
+// =====================
+
+model PracticeSession {
+  id           String       @id @default(cuid())
+  userId       String
+  activityType ActivityType
+  
+  // Questions and answers (JSON arrays)
+  questions    Json
+  answers      Json
+  
+  correctCount Int          @default(0)
+  totalCount   Int          @default(0)
+  pointsEarned Int          @default(0)
+  
+  completedAt  DateTime     @default(now())
+  
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([activityType])
+}
+
+enum ActivityType {
+  VOCABULARY
+  FILL_BLANK
+  SENTENCE_ORDER
+  FREE_WRITING
+  CHINESE_VOCAB
+  WORD_ORDER
+  SENTENCE_CONSTRUCTION
+}
+
+// =====================
+// Vocabulary
+// =====================
+
+model Vocabulary {
+  id              String   @id @default(cuid())
+  word            String   @unique
+  meaning         String
+  meaningChinese  String?
+  exampleSentence String?
+  difficulty      Difficulty @default(MEDIUM)
+  
+  createdAt       DateTime @default(now())
+  
+  // Relations
+  userProgress    UserVocabulary[]
+  
+  @@index([difficulty])
+}
+
+enum Difficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+
+model UserVocabulary {
+  userId       String
+  vocabularyId String
+  correctCount Int      @default(0)
+  wrongCount   Int      @default(0)
+  lastPracticed DateTime @default(now())
+  
+  // Relations
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  vocabulary Vocabulary @relation(fields: [vocabularyId], references: [id], onDelete: Cascade)
+  
+  @@id([userId, vocabularyId])
+  @@index([userId])
+}
+
+// =====================
+// Badges & Achievements
+// =====================
+
+model Badge {
+  id          String   @id @default(cuid())
+  badgeType   String   @unique
+  name        String
+  nameThai    String
+  description String
+  iconUrl     String?
+  requirement Int      @default(1)
+  
+  // Relations
+  userBadges  UserBadge[]
+}
+
+model UserBadge {
+  userId    String
+  badgeId   String
+  earnedAt  DateTime @default(now())
+  
+  // Relations
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  badge Badge @relation(fields: [badgeId], references: [id], onDelete: Cascade)
+  
+  @@id([userId, badgeId])
+  @@index([userId])
+}
+
+// =====================
+// System Configuration
+// =====================
+
+model SystemConfig {
+  id    String @id @default(cuid())
+  key   String @unique
+  value String
+  
+  @@index([key])
+}
+
+// =====================
+// Chinese-Thai Vocabulary (New Game)
+// =====================
+
+model ChineseVocabulary {
+  id           String   @id @default(cuid())
+  chineseWord  String   @unique
+  thaiMeaning  String
+  category     String?
+  
+  createdAt    DateTime @default(now())
+  
+  @@index([category])
+}
+
+// =====================
+// Fill-in-Blank Questions
+// =====================
+
+model FillBlankQuestion {
+  id             String   @id @default(cuid())
+  sentence       String   @db.Text
+  answer         String
+  category       String?
+  
+  createdAt      DateTime @default(now())
+  
+  @@index([category])
+}
+
+// =====================
+// Word Order Questions
+// =====================
+
+model WordOrderQuestion {
+  id             String   @id @default(cuid())
+  shuffledWords  Json     // Array of numbered words
+  correctAnswer  String   @db.Text
+  category       String?
+  
+  createdAt      DateTime @default(now())
+  
+  @@index([category])
+}
+
+// =====================
+// Sentence Construction Pairs
+// =====================
+
+model SentenceConstructionPair {
+  id         String   @id @default(cuid())
+  word1      String
+  word2      String
+  category   String?
+  
+  createdAt  DateTime @default(now())
+  
+  @@index([category])
+}
+
+// =====================
+// Writing Tasks with Examples
+// =====================
+
+model WritingTask {
+  id              String   @id @default(cuid())
+  taskNumber      Int      @unique
+  title           String
+  description     String   @db.Text
+  bestExample     String   @db.Text
+  generalExample  String   @db.Text
+  badExample      String   @db.Text
+  isActive        Boolean  @default(true)
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  // Relations
+  submissions     WritingSubmission[]
+  
+  @@index([taskNumber])
+  @@index([isActive])
+}
+
+model WritingSubmission {
+  id              String   @id @default(cuid())
+  userId          String
+  writingTaskId   String
+  content         String   @db.Text
+  
+  // 5-Criteria Rubric Scores (1-4 each)
+  contentScore       Int   @default(0)
+  organizationScore  Int   @default(0)
+  grammarScore       Int   @default(0)
+  vocabularyScore    Int   @default(0)
+  mechanicsScore     Int   @default(0)
+  totalScore         Int   @default(0)
+  
+  // AI Feedback
+  aiFeedback      String?  @db.Text
+  pointsEarned    Int      @default(0)
+  
+  submittedAt     DateTime @default(now())
+  
+  // Relations
+  writingTask WritingTask @relation(fields: [writingTaskId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([writingTaskId])
+  @@index([submittedAt])
+}
+
+// =====================
+// Game Sessions
+// =====================
+
+enum GameType {
+  CHINESE_VOCAB
+  FILL_BLANK
+  WORD_ORDER
+  SENTENCE_CONSTRUCTION
+}
+
+model LanguageGameSession {
+  id           String    @id @default(cuid())
+  odUserId     String
+  gameType     GameType
+  
+  // Game state
+  questions    Json      @default("[]")
+  answers      Json      @default("[]")
+  currentIndex Int       @default(0)
+  isCompleted  Boolean   @default(false)
+  
+  // Results
+  correctCount Int       @default(0)
+  totalCount   Int       @default(0)
+  pointsEarned Int       @default(0)
+  
+  startedAt    DateTime  @default(now())
+  completedAt  DateTime?
+  
+  @@map("language_game_sessions")
+  @@index([odUserId])
+  @@index([gameType])
+  @@index([isCompleted])
+}
