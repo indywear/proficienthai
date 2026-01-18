@@ -300,6 +300,9 @@ export default function DashboardPage() {
                     </Link>
                     <div className="nav-links">
                         <Link href="/dashboard" className="nav-link active">Dashboard</Link>
+                        <Link href="/leaderboard" className="nav-link">Leaderboard</Link>
+                        <Link href="/tasks" className="nav-link">Tasks</Link>
+                        <Link href="/about" className="nav-link">About</Link>
                     </div>
                 </div>
             </nav>

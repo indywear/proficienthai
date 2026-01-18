@@ -8,7 +8,7 @@ import {
     lineClient,
     createTextMessage,
 } from "@/lib/line/client";
-import { generateWritingFeedback, generateConversationResponse } from "@/lib/ai/feedback";
+import { generateWritingFeedback, generateConversationResponse, generateSimpleFeedback } from "@/lib/ai/feedback";
 import {
     POINTS,
     calculateLevel,
@@ -59,7 +59,8 @@ const MENU_KEYWORDS = {
     PRACTICE: ["ฝึกฝน", "practice", "ฝึก"],
     DASHBOARD: ["แดชบอร์ด", "dashboard", "ความก้าวหน้า"],
     PROFILE: ["ข้อมูลส่วนตัว", "profile", "โปรไฟล์"],
-    // New Games
+    CANCEL: ["ยกเลิก", "cancel", "หยุด", "ออก"],
+    HELP: ["ช่วยเหลือ", "help", "วิธีใช้", "เมนู", "menu"],
     GAME_MENU: ["เกม", "game", "games", "เล่นเกม"],
     VOCAB_GAME: ["คำศัพท์", "vocabulary", "vocab", "คำศัพท์จีน"],
     FILL_BLANK_GAME: ["เติมคำ", "fill blank", "fillblank", "เติมช่องว่าง"],
@@ -169,7 +170,12 @@ export async function handleTextMessage(
             case "PROFILE":
                 await handleProfile(event.replyToken, userId);
                 break;
-            // Game handlers
+            case "CANCEL":
+                await handleCancel(event.replyToken, userId);
+                break;
+            case "HELP":
+                await handleHelp(event.replyToken, userId);
+                break;
             case "GAME_MENU":
                 await handleGameMenu(event.replyToken, userId);
                 break;
@@ -304,62 +310,65 @@ async function handleFeedbackStart(replyToken: string, userId: string) {
         return;
     }
 
+    const activeTask = await prisma.task.findFirst({
+        where: { isActive: true },
+        orderBy: { weekNumber: "desc" },
+    });
+
     const session = getSession(userId);
     session.currentAction = "FEEDBACK";
     session.awaitingInput = true;
 
-    await replyText(
-        replyToken,
-        `สวัสดีครับ คุณ${user.thaiName}!\n\nส่งฉบับร่างของคุณมาได้เลยครับ ผมจะช่วยตรวจและให้คำแนะนำ\n\n(พิมพ์ข้อความที่ต้องการให้ตรวจ)`
-    );
+    if (activeTask) {
+        session.feedbackTaskId = activeTask.id;
+        await replyWithQuickReply(
+            replyToken,
+            `สวัสดีครับ คุณ${user.thaiName}!\n\n📌 ภาระงานปัจจุบัน: สัปดาห์ที่ ${activeTask.weekNumber}\n${activeTask.title}\n\nส่งฉบับร่างมาได้เลยครับ ผมจะช่วยตรวจและให้คะแนนเบื้องต้นตามเกณฑ์ 5 ข้อ`,
+            [
+                { label: "ขอดูโจทย์", text: `โจทย์สัปดาห์ ${activeTask.weekNumber}` },
+                { label: "ยกเลิก", text: "ยกเลิก" },
+            ]
+        );
+    } else {
+        session.feedbackTaskId = undefined;
+        await replyText(
+            replyToken,
+            `สวัสดีครับ คุณ${user.thaiName}!\n\nขณะนี้ยังไม่มีภาระงานที่เปิดรับ\n\nส่งข้อความภาษาไทยมาได้เลยครับ ผมจะช่วยตรวจและให้คำแนะนำทั่วไป`
+        );
+    }
 }
 
 async function handleFeedbackSubmission(replyToken: string, userId: string, content: string) {
     const user = await prisma.user.findUnique({ where: { lineUserId: userId } });
     if (!user) return;
 
-    // Get current active task (if any)
-    const activeTask = await prisma.task.findFirst({
-        where: { isActive: true },
-        orderBy: { weekNumber: "desc" },
-    });
+    const session = getSession(userId);
+    const isTaskFeedback = session.feedbackTaskId !== undefined;
 
-    // Generate AI feedback
-    const feedback = await generateWritingFeedback(
-        content,
-        activeTask?.description || "งานเขียนทั่วไป",
-        false
-    );
+    let feedbackMessage: string;
 
-    // Save feedback request
-    await prisma.feedbackRequest.create({
-        data: {
-            userId: user.id,
-            taskId: activeTask?.id,
-            draftContent: content,
-            aiFeedback: JSON.stringify(feedback),
-            pointsEarned: POINTS.REQUEST_FEEDBACK,
-        },
-    });
+    if (isTaskFeedback) {
+        const task = await prisma.task.findUnique({ where: { id: session.feedbackTaskId } });
+        
+        const feedback = await generateWritingFeedback(
+            content,
+            task?.description || "งานเขียน",
+            false
+        );
 
-    // Update user points
-    const newTotalPoints = user.totalPoints + POINTS.REQUEST_FEEDBACK;
-    const newLevel = calculateLevel(newTotalPoints);
+        await prisma.feedbackRequest.create({
+            data: {
+                userId: user.id,
+                taskId: task?.id,
+                draftContent: content,
+                aiFeedback: JSON.stringify(feedback),
+                pointsEarned: POINTS.REQUEST_FEEDBACK,
+            },
+        });
 
-    await prisma.user.update({
-        where: { id: user.id },
-        data: {
-            totalPoints: newTotalPoints,
-            currentLevel: newLevel,
-        },
-    });
+        feedbackMessage = `📝 ผลป้อนกลับจาก ProficienThAI
 
-    clearSession(userId);
-
-    // Format feedback message
-    const feedbackMessage = `📝 ผลป้อนกลับจาก ProficienThAI
-
-📊 คะแนน (เต็ม 20):
+📊 คะแนนเบื้องต้น (เต็ม 20):
 - เนื้อหา: ${feedback.scores.content}/4
 - การลำดับความ: ${feedback.scores.organization}/4
 - ไวยากรณ์: ${feedback.scores.grammar}/4
@@ -374,8 +383,40 @@ ${feedback.suggestions.map((s, i) => `${i + 1}. ${s}`).join("\n")}
 
 ${feedback.encouragement}
 
-${formatPointsMessage(POINTS.REQUEST_FEEDBACK, "ขอผลป้อนกลับ")}`;
+${formatPointsMessage(POINTS.REQUEST_FEEDBACK, "ขอผลป้อนกลับ")}
 
+📌 เมื่อแก้ไขเสร็จแล้ว พิมพ์ "ส่งงาน" เพื่อส่งงานจริง`;
+    } else {
+        const simpleFeedback = await generateSimpleFeedback(content);
+
+        await prisma.feedbackRequest.create({
+            data: {
+                userId: user.id,
+                draftContent: content,
+                aiFeedback: simpleFeedback,
+                pointsEarned: POINTS.REQUEST_FEEDBACK,
+            },
+        });
+
+        feedbackMessage = `📝 ผลป้อนกลับจาก ProficienThAI
+
+${simpleFeedback}
+
+${formatPointsMessage(POINTS.REQUEST_FEEDBACK, "ขอผลป้อนกลับ")}`;
+    }
+
+    const newTotalPoints = user.totalPoints + POINTS.REQUEST_FEEDBACK;
+    const newLevel = calculateLevel(newTotalPoints);
+
+    await prisma.user.update({
+        where: { id: user.id },
+        data: {
+            totalPoints: newTotalPoints,
+            currentLevel: newLevel,
+        },
+    });
+
+    clearSession(userId);
     await replyText(replyToken, feedbackMessage);
 }
 
@@ -611,6 +652,59 @@ async function handleProfile(replyToken: string, userId: string) {
         replyToken,
         messages: [profileFlex] as any,
     });
+}
+
+// =====================
+// Cancel Handler
+// =====================
+
+async function handleCancel(replyToken: string, userId: string) {
+    clearSession(userId);
+    await replyText(replyToken, `ยกเลิกการทำงานปัจจุบันแล้วครับ
+
+พิมพ์ "เมนู" เพื่อดูคำสั่งทั้งหมด`);
+}
+
+// =====================
+// Help Handler
+// =====================
+
+async function handleHelp(replyToken: string, userId: string) {
+    const user = await prisma.user.findUnique({ where: { lineUserId: userId } });
+
+    const helpMessage = user?.isRegistered
+        ? `สวัสดีครับ คุณ${user.thaiName}!
+
+📌 คำสั่งที่ใช้ได้:
+
+📝 การเรียน:
+• "ส่งงาน" - ส่งภาระงานประจำสัปดาห์
+• "ขอผลป้อนกลับ" - ขอให้ AI ตรวจร่างงานเขียน
+• "ฝึกฝน" - ฝึกคำศัพท์
+
+🎮 เกม:
+• "เกม" - ดูเกมทั้งหมด
+• "คำศัพท์" - เกมคำศัพท์จีน-ไทย
+• "เติมคำ" - เกมเติมคำในช่องว่าง
+• "เรียงคำ" - เกมเรียงคำ
+• "แต่งประโยค" - เกมแต่งประโยค
+
+📊 อื่นๆ:
+• "แดชบอร์ด" - ดูความก้าวหน้า
+• "ข้อมูลส่วนตัว" - ดูข้อมูลของคุณ
+• "ยกเลิก" - ยกเลิกการทำงานปัจจุบัน`
+        : `ยินดีต้อนรับสู่ ProficienThAI!
+
+📌 คำสั่งสำหรับผู้ใช้ใหม่:
+• "ลงทะเบียน" - เริ่มลงทะเบียนใช้งาน
+
+เมื่อลงทะเบียนแล้วจะสามารถ:
+- ส่งงานเขียน
+- ขอผลป้อนกลับจาก AI
+- เล่นเกมฝึกภาษา
+- สะสมแต้มและ Badge`;
+
+    await replyText(replyToken, helpMessage);
 }
 
 // =====================

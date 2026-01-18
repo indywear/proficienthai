@@ -27,6 +27,43 @@ interface FeedbackResult {
     };
 }
 
+export async function generateSimpleFeedback(
+    content: string
+): Promise<string> {
+    const systemPrompt = `You are ProficienThAI, a friendly Thai language tutor.
+Give brief, helpful feedback on the student's Thai writing in 2-3 sentences.
+Focus on encouragement and 1-2 key improvements.
+Always respond in Thai language.`;
+
+    try {
+        const response = await axios.post(
+            OPENROUTER_API_URL,
+            {
+                model: MODEL,
+                messages: [
+                    { role: "system", content: systemPrompt },
+                    { role: "user", content: `ช่วยตรวจและให้คำแนะนำสั้นๆ:\n\n${content}` },
+                ],
+                temperature: 0.7,
+                max_tokens: 300,
+            },
+            {
+                headers: {
+                    Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
+                    "Content-Type": "application/json",
+                    "HTTP-Referer": process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
+                    "X-Title": "ProficienThAI",
+                },
+            }
+        );
+
+        return response.data.choices[0]?.message?.content || "ขอบคุณที่ส่งงานมาครับ!";
+    } catch (error) {
+        console.error("Simple Feedback Error:", error);
+        return "ขอบคุณที่ส่งงานมาครับ! ลองตรวจสอบการสะกดคำและการเว้นวรรคอีกครั้งนะครับ";
+    }
+}
+
 export async function generateWritingFeedback(
     content: string,
     taskDescription: string,

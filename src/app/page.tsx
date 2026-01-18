@@ -3,11 +3,47 @@ import Link from "next/link";
 export default function Home() {
   return (
     <main className="min-h-screen">
+      {/* Navigation */}
+      <nav style={{
+        position: "absolute",
+        top: 0,
+        left: 0,
+        right: 0,
+        padding: "16px 20px",
+        zIndex: 100,
+      }}>
+        <div className="container" style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}>
+          <Link href="/" style={{
+            color: "white",
+            textDecoration: "none",
+            fontWeight: "700",
+            fontSize: "1.25rem",
+          }}>
+            ProficienThAI
+          </Link>
+          <div style={{ display: "flex", gap: "24px" }}>
+            <Link href="/leaderboard" style={{ color: "rgba(255,255,255,0.9)", textDecoration: "none" }}>
+              Leaderboard
+            </Link>
+            <Link href="/tasks" style={{ color: "rgba(255,255,255,0.9)", textDecoration: "none" }}>
+              Tasks
+            </Link>
+            <Link href="/about" style={{ color: "rgba(255,255,255,0.9)", textDecoration: "none" }}>
+              About
+            </Link>
+          </div>
+        </div>
+      </nav>
+
       {/* Hero Section */}
       <section style={{
         background: "linear-gradient(135deg, #4CAF50 0%, #2E7D32 100%)",
         color: "white",
-        padding: "80px 20px",
+        padding: "120px 20px 80px",
         textAlign: "center"
       }}>
         <div className="container">
